@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}Usage Screen{% endblock %}
+{% block content %}
+<h2>Client Feature Checklist</h2>
+
+<div class="accordion" id="usageAccordion">
+  {% for client in clients %}
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading{{ client.id }}">
+        <button class="accordion-button collapsed" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#clientCollapse{{ client.id }}"
+                aria-expanded="false"
+                aria-controls="clientCollapse{{ client.id }}">
+          {{ client.client_name }}
+        </button>
+      </h2>
+      <div id="clientCollapse{{ client.id }}" class="accordion-collapse collapse"
+           aria-labelledby="heading{{ client.id }}" data-bs-parent="#usageAccordion">
+        <div class="accordion-body">
+          <strong>{{ completion_percent|get_item:client.id }}% completed</strong>
+
+          <form method="post">
+            {# The main form contains the CSRF token needed for all AJAX POST requests #}
+            {% csrf_token %} 
+            <input type="hidden" name="client_id" value="{{ client.id }}">
+            {% for feature in features %}
+              <div class="form-check mb-3">
+                <input class="form-check-input feature-checkbox"
+                       type="checkbox"
+                       id="feature-{{ client.id }}-{{ forloop.counter }}"
+                       name="feature"
+                       value="{{ feature }}"
+                       data-client-id="{{ client.id }}"
+                       data-feature-id="{{ forloop.counter }}"
+                       onchange="toggleMessageBox(this)"
+                       {% if progress|get_item:client.id|get_item:feature %}checked{% endif %}>
+                <label class="form-check-label"
+                       for="feature-{{ client.id }}-{{ forloop.counter }}">{{ feature }}</label>
+
+                <div id="message-box-{{ client.id }}-{{ forloop.counter }}"
+                     class="mt-2"
+                     style="display: none;">
+                  <input type="text"
+                         class="form-control mb-2"
+                         placeholder="Enter message to client...">
+                  <input type="file"
+                         class="form-control mb-2"
+                         accept="*/*">
+                  
+                  {# --- MODIFIED HTML: Pass client.id instead of phone number --- #}
+                  <button type="button"
+                          class="btn btn-sm"
+                          style="background-color:#142f44;color:#fff;border-color:#142f44;"
+                          onclick="sendWhatsApp('{{ client.id }}', '{{ feature }}', this)">
+                    Send
+                  </button>
+                  {# ----------------------------------------------------------------- #}
+                </div>
+
+                {% if feature == "Complaints" %}
+                  <input type="text"
+                         class="form-control mt-2"
+                         name="complaints_{{ client.id }}"
+                         value="{{ complaints|get_item:client.id|default_if_none:'' }}"
+                         placeholder="Enter complaint details..." />
+                {% endif %}
+              </div>
+            {% endfor %}
+            <button type="submit" class="btn mt-2"
+                    style="background-color:#142f44;color:#fff;border-color:#142f44;">
+              Save
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+function toggleMessageBox(checkbox) {
+    const clientId = checkbox.getAttribute('data-client-id');
+    const featureId = checkbox.getAttribute('data-feature-id');
+    const boxId = 'message-box-' + clientId + '-' + featureId;
+    const box = document.getElementById(boxId);
+
+    if (checkbox.checked) {
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+}
+
+function sendWhatsApp(clientId, featureName, buttonElement) {
+    const container = buttonElement.parentElement;
+    const input = container.querySelector('input[type="text"]');
+    const msg = input.value || `Regarding feature: ${featureName}`;
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    buttonElement.disabled = true;
+    const originalText = buttonElement.textContent;
+    buttonElement.textContent = "Sending...";
+
+    fetch("{% url 'send_whatsapp_api' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+        },
+        body: JSON.stringify({
+            client_id: clientId,
+            message: msg
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            alert("✅ WhatsApp message sent!");
+            input.value = "";
+        } else {
+            alert("❌ Error: " + data.message);
+        }
+    })
+    .catch(err => {
+        alert("❌ Request failed: " + err);
+    })
+    .finally(() => {
+        buttonElement.disabled = false;
+        buttonElement.textContent = originalText;
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales Window</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .sales-dashboard { background: #f8f9fa; padding: 30px; border-radius: 10px;
+                           box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .target-header h1 { color: #2c3e50; margin-bottom: 10px; }
+        .target-header h2 { color: #27ae60; font-size: 2em; }
+        .progress-container { margin: 30px 0; }
+        .progress-bar { background: #ecf0f1; height: 30px; border-radius: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71);
+                         transition: width 0.5s ease; }
+        .progress-text { font-size: 1.2em; font-weight: bold; color: #2c3e50; margin-top: 10px; }
+        .sales-entry-form { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .form-group { margin-bottom: 15px; }
+        input[type="number"] { width: 100%; padding: 12px; border: 2px solid #ddd;
+                               border-radius: 5px; font-size: 16px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer;
+               font-size: 16px; text-decoration: none; display: inline-block; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-secondary { background: #3498db; color: white; }
+        .notes-field { width: 100%; min-height: 80px; padding: 10px; font-size: 16px;
+                       border: 2px solid #ddd; border-radius: 5px; resize: vertical; }
+        .recent-sales { margin-top: 30px; }
+        .recent-item { background: white; padding: 15px; margin: 10px 0;
+                       border-radius: 5px; border-left: 4px solid #27ae60; }
+        .alert { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .top-links { margin-bottom: 20px; }
+        .top-links a { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="sales-dashboard">
+        <div class="top-links">
+            <!-- Link back to current month -->
+            <a href="{% url 'sales_window_current' %}" class="btn btn-secondary">
+                🏠 Current Month
+            </a>
+        </div>
+
+        <div class="target-header" style="text-align: center;">
+            <h1>Sales Window - {{ current_month }}</h1>
+
+            {% if monthly_target == 0 %}
+                <h2 style="color: #e74c3c;">Target: Not Set</h2>
+                {% if can_edit_target %}
+                    <p>
+                        <a href="{% url 'set_monthly_target' %}" class="btn btn-secondary" style="margin-top: 10px;">
+                            ⚙️ Set Monthly Target
+                        </a>
+                    </p>
+                {% endif %}
+            {% else %}
+                <h2>Monthly Target: RM{{ monthly_target|floatformat:0 }}</h2>
+            {% endif %}
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
+            </div>
+            <div class="progress-text" style="text-align: center;">
+                RM{{ current_sales|floatformat:0 }} / RM{{ monthly_target|floatformat:0 }}
+                ({{ progress_percentage|floatformat:1 }}%)
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% if is_current_month %}
+            <!-- Only current month can add sales -->
+            <form method="post" class="sales-entry-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="number" name="sales_amount" step="0.01" min="0"
+                           placeholder="Enter today's sales amount (RM)" required>
+                </div>
+                <div class="form-group">
+                    <textarea name="notes" class="notes-field"
+                              placeholder="Optional notes..." maxlength="400"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">✅ Complete Sale</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px;">
+                {% if can_edit_target %}
+                    <a href="{% url 'set_monthly_target' %}" class="btn btn-secondary">
+                        ⚙️ Set/Update Monthly Target
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <!-- Past or future month: read-only -->
+            <p style="text-align:center; margin-top:20px; color:#666;">
+                Viewing past/future month. Sales and target cannot be changed.
+            </p>
+
+            <div style="text-align:center; margin-top:20px;">
+                <a href="{% url 'sales_summary_pdf' month_year=month_year %}" class="btn btn-secondary">
+                    📄 Summarise & Download PDF
+                </a>
+            </div>
+        {% endif %}
+
+        {% if recent_sales %}
+            <div class="recent-sales">
+                {% if is_current_month %}
+                    <h3>Recent Sales (Last 5)</h3>
+                {% else %}
+                    <h3>All Sales for {{ current_month }}</h3>
+                {% endif %}
+                {% for sale in recent_sales %}
+                    <div class="recent-item">
+                        <strong>RM{{ sale.amount|floatformat:2 }}</strong>
+                        on {{ sale.entry_date|date:"M d, Y" }}
+                        {% if sale.notes %}
+                            <br><small>{{ sale.notes }}</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

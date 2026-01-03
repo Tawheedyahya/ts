@@ -1,0 +1,13 @@
+venv/
+ticketingsystem/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+*.log
+.cache/
+.pytest_cache/
+coverage/
+htmlcov/
+bfg-1.15.0.jar
+ticketingsystem/settings.py

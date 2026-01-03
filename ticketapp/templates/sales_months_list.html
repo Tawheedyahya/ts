@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .history-header {
+        background: #2c3e50;
+        color: white;
+        padding: 2px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .history-container {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: 520px;      /* adjust so 4–5 cards fit */
+        overflow-y: auto;       /* scroll if there are many months */
+    }
+
+    .month-card {
+        background: white;
+        padding: 12px 18px;
+        margin: 8px 0;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 4px solid #3498db;
+    }
+
+    .month-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .month-title {
+        font-size: 1.2em;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+    }
+
+    .stat-item {
+        text-align: center;
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.8em;
+        color: #666;
+    }
+
+    .stat-value {
+        font-size: 1.05em;
+        font-weight: bold;
+    }
+
+    .success-high { color: #27ae60; }
+    .success-medium { color: #f39c12; }
+    .success-low { color: #e74c3c; }
+
+    .back-btn {
+        display: inline-block;
+        background: #2c3e50;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-height: 700px) {
+        .history-container {
+            max-height: 420px;  /* smaller screens: slightly shorter box */
+        }
+    }
+</style>
+
+
+</head>
+<body>
+    <a href="{% url 'sales_window_current' %}" class="back-btn">← Back to Current Sales</a>
+    
+    <div class="history-header">
+        <h1>📊 Sales History</h1>
+    </div>
+    
+    <div class="history-container">
+        {% for month_data in monthly_history %}
+        <div class="month-card" onclick="window.location.href='{% url 'sales_window' month_data.month_year %}'">
+            <div class="month-title">{{ month_data.month_name }}</div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-label">Target</div>
+                    <div class="stat-value">RM{{ month_data.target|floatformat:0 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Achieved</div>
+                    <div class="stat-value">RM{{ month_data.achieved|floatformat:0 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Success</div>
+                    <div class="stat-value 
+                        {% if month_data.success_percent >= 80 %}success-high
+                        {% elif month_data.success_percent >= 50 %}success-medium
+                        {% else %}success-low{% endif %}">
+                        {{ month_data.success_percent }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #666; font-style: italic;">No sales history available yet.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
