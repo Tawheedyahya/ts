@@ -11,3 +11,5 @@ coverage/
 htmlcov/
 bfg-1.15.0.jar
 ticketingsystem/settings.py
+.env
+.env.*
