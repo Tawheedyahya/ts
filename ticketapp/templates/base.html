@@ -15,130 +15,153 @@
             margin: 0;
             padding: 0;
         }
+
+        /* Fixed Sidebar - NO SCROLLBAR EVER */
         #sidebar {
-        width: 250px;
-        position: fixed;
-        top: 0;
-        left: 0;              /* ✅ always visible */
-        height: 100%;
-        background: #abf5ab;
-        color: white;
-        padding-top: 60px;
-        transition: none;     /* no slide animation */
-        }
-        #sidebar.active {
+            width: 250px;
+            position: fixed;
+            top: 0;
             left: 0;
+            height: 100vh;
+            background-color: #142f44;
+            color: white;
+            padding-top: 40px;
+            padding-bottom: 100px;  /* ✅ Space for all items */
+            overflow-y: hidden;     /* ✅ NO SCROLLBAR */
+            transition: left 0.3s ease;
+            z-index: 1000;
+            /* Hide scrollbars cross-browser */
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* IE/Edge */
+        }
+        #sidebar::-webkit-scrollbar {
+            display: none;  /* Chrome/Safari */
+        }
+        #sidebar:not(.active) {
+            left: -250px;
         }
         #sidebar ul {
             list-style: none;
-            padding: 0;
+            padding: 0 0 200px 0 !important;  /* ✅ Bottom space for Logout */
+            margin: 0;
         }
         #sidebar ul li {
-            padding: 15px;
+             padding: 5px;
         }
         #sidebar ul li a {
             color: #e2ffe2;
             text-decoration: none;
+            display: block;
+            padding: 8px 15px;
+            border-radius: 4px;
         }
         #sidebar ul li a:hover {
-            text-decoration: underline;
-        }
-        #content {
-        margin-left: 250px;   /* ✅ pushes content aside */
-        padding: 20px;
-        transition: none;
-        }
-        #content.active {
-            margin-left: 250px;
+            background-color: rgba(255,255,255,0.1);
+            text-decoration: none;
         }
 
-        /* Status dropdown background colors */
-        select[name="status"].pending {
-            background-color: rgb(246, 246, 111); /* yellow */
-            color: #212529;
+        /* Content area */
+        #content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
         }
-        select[name="status"].work-in-process {
-            background-color: #45daf8; /* blue */
-            color: #212529;
+        #content:not(.active) {
+            margin-left: 0;
         }
-        select[name="status"].completed {
-            background-color: #24bc75; /* green */
-            color: white;
+
+        /* Hamburger button */
+        #sidebarCollapse {
+            display: block !important;
+            background-color: #142f44 !important;
+            border-color: #142f44 !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            margin-right: 15px !important;
         }
+        #sidebarCollapse:hover {
+            background-color: #0f2333 !important;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,1)' stroke-linecap='round' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+            width: 24px !important;
+            height: 24px !important;
+        }
+
+        /* Status dropdowns */
+        select[name="status"].pending { background-color: rgb(246, 246, 111); color: #212529; }
+        select[name="status"].work-in-process { background-color: #45daf8; color: #212529; }
+        select[name="status"].completed { background-color: #24bc75; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div id="sidebar" style="
-    width: 250px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;   /* full viewport height */
-    background-color: #142f44;
-    color: #222;
-    padding-top: 60px;
-    overflow-y: auto;   /* scroll if content overflows */
-    border-radius: 0;
-    box-shadow: none;
-    transition: none;
-    z-index: 1000; 
-    ">
-    <ul style="list-style:none; padding:0; margin:0;">
-        <li><a href="{% url 'ticket_volume_dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'ticket_list' %}">Ticket List</a></li>
-        <li><a href="{% url 'ticket_create' %}">Create Ticket</a></li>
-        <li><a href="{% url 'ticket_filter' %}">Filter Tickets</a></li>
-        <!-- <li><a href="{% url 'client_status' %}">Client Status</a></li>
-        <li><a href="{% url 'usage_screen' %}">Client Feature Checklist</a></li> -->
-
-    </ul>
+    <!-- Sidebar - NO SCROLLBAR -->
+    <div id="sidebar" class="active">
+        <ul>
+            <li><a href="{% url 'ticket_volume_dashboard' %}">Dashboard</a></li>
+            <li>
+                {% if user.is_superuser %}
+                    <a href="{% url 'admin_ticket_list' %}">All Tickets</a>
+                {% else %}
+                    <a href="{% url 'user_ticket_list' %}">My Tickets</a>
+                {% endif %}
+            </li>
+            <li><a href="{% url 'ticket_create' %}">Create Ticket</a></li>
+            {% if user.is_superuser %}
+            <li><a href="{% url 'ticket_filter' %}">Filter Tickets</a></li>
+            <li><a href="{% url 'client_status' %}">Client Status</a></li>
+            <li><a href="{% url 'usage_screen' %}">Client Feature Checklist</a></li>
+            <li><a href="{% url 'create_normal_user' %}">Create User</a></li>
+            <li><a href="{% url 'user_list' %}">User List</a></li>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+            {% endif %}
+        </ul>
     </div>
 
-
-    <!-- Page Content -->
-    <div id="content">
-        <nav class="navbar navbar-light bg-light mb-3">
-            <button type="button" id="sidebarCollapse" class="btn" style="background-color: #142f44; color: white; border: none;">
-                ☰
-              </button>
-            <span class="navbar-brand mb-0 h1">Ticket System</span>
+    <!-- Content -->
+    <div id="content" class="active">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3 py-2">
+            <div class="container-fluid">
+                <button type="button" id="sidebarCollapse" class="navbar-toggler me-3">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <span class="navbar-brand mb-0 h1 fw-bold text-dark">Ticket System</span>
+            </div>
         </nav>
-
         <div class="container-fluid">
-            {% block content %}
-            {% endblock %}
+            {% block content %}{% endblock %}
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Sidebar toggle
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             const btn = document.getElementById('sidebarCollapse');
-            btn.addEventListener('click', () => {
+
+            function toggleSidebar() {
                 sidebar.classList.toggle('active');
                 content.classList.toggle('active');
-            });
+            }
 
-            // Status dropdown color update
-            document.querySelectorAll('select[name="status"]').forEach((select) => {
+            if (btn) btn.addEventListener('click', toggleSidebar);
+
+            document.querySelectorAll('select[name="status"]').forEach(select => {
                 function updateClass() {
                     select.classList.remove("pending", "work-in-process", "completed");
                     const val = select.value.toLowerCase().replace(/\s/g, "-");
-                    select.classList.add(val);
+                    if (val) select.classList.add(val);
                 }
                 select.addEventListener("change", updateClass);
                 updateClass();
             });
         });
     </script>
-
-<!-- Bootstrap 5 bundle (already good) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-{% block extra_js %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
 </body> 
 </html>

@@ -14,7 +14,7 @@
         <label for="subject" class="form-label fw-bold">Subject</label>
         <input type="text" class="form-control" id="subject" name="subject" placeholder="Enter ticket subject" required />
       </div>
-  
+      
       <div class="col-md-6">
         <label for="priority" class="form-label fw-bold">Priority</label>
         <select class="form-select" id="priority" name="priority" required>
@@ -23,51 +23,70 @@
           <option>Low</option>
         </select>
       </div>
-  
+      
       <div class="col-md-6">
         <label for="requester_name" class="form-label fw-bold">Requester Name</label>
         <input type="text" class="form-control" id="requester_name" name="requester_name" placeholder="Enter your name" required />
       </div>
-  
+      
       <div class="col-md-6">
         <label for="requester_email" class="form-label fw-bold">Requester Email</label>
         <input type="email" class="form-control" id="requester_email" name="requester_email" placeholder="Enter your email" required />
       </div>
-  
+      
+      <!-- Updated Assigned To with auto-fill -->
       <div class="col-md-6">
         <label for="assigned_to" class="form-label fw-bold">Assign To</label>
-        <select class="form-select" id="assigned_to" name="assigned_to">
+        <select class="form-select" id="assigned_to" name="assigned_to" onchange="autoFillPhone()">
           <option value="" selected>Unassigned</option>
-          <option value="suva">Suva</option>
-          <option value="nithi">Nithi</option>
-          <option value="hari">Hari</option>
           <option value="abinav">Abinav</option>
-          <option value="aravind">Aravind</option>
-          <option value="tawheed">Tawheed</option>
+          <option value="suvalakshmi">Suvalakshmi</option>
+          <option value="meet">Meet</option>
+          <option value="tawheed">Tawheed Yahya</option>
+          <option value="nithi">Nithi Shri</option>
         </select>
       </div>
-  
+      
       <div class="col-md-6">
         <label for="assigned_phone" class="form-label fw-bold">Assigned User Phone</label>
-        <input type="text" class="form-control" id="assigned_phone" name="assigned_phone"
-          placeholder="Enter assigned user's phone number" />
+        <input type="text" class="form-control" id="assigned_phone" name="assigned_phone" placeholder="Auto-fills when user selected" readonly />
       </div>
-  
+      
       <div class="col-md-6">
         <label for="requester_phone" class="form-label fw-bold">Requester Phone</label>
         <input type="text" class="form-control" id="requester_phone" name="requester_phone" placeholder="Enter your phone number" required />
       </div>
+      
+      <div class="col-12">
+        <label for="client_phone" class="form-label fw-bold">Client Phone Number</label>
+        <input type="text" class="form-control" id="client_phone" name="client_phone" placeholder="Enter client phone number" required />
+      </div>
+      
     </div>
 
-    <div class="col-md-6">
-      <label for="client_phone" class="form-label fw-bold">Client Phone Number</label>
-      <input type="text" class="form-control" id="client_phone" name="client_phone" placeholder="Enter client phone number" required />
-    </div>
-  
-    <button type="submit" class="w-100 mt-4" style="background-color:  #142f44; color: white; border: none; font-weight: 600; padding: 10px 0; border-radius: 6px;">
+    <button type="submit" class="w-100 mt-4 btn btn-dark fw-bold py-2">
       Create Ticket
     </button>
   </form>
-  
 </div>
+
+<script>
+// Auto-fill assigned phone numbers - YOUR EXACT 5 USERS
+function autoFillPhone() {
+  const assignedTo = document.getElementById('assigned_to');
+  const phoneField = document.getElementById('assigned_phone');
+  
+  const phoneNumbers = {
+    'abinav': '918248111060',
+    'suvalakshmi': '919791717643',
+    'meet': '919327606510',
+    'tawheed': '919994780436',
+    'nithi': '60125805024'
+  };
+  
+  const selectedValue = assignedTo.value;
+  phoneField.value = phoneNumbers[selectedValue] || '';
+}
+</script>
+
 {% endblock %}

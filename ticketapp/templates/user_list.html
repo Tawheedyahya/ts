@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}User List{% endblock %}
+
+{% block content %}
+
+<style>
+  .main-content {
+    padding: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    text-align: left;
+  }
+
+  th {
+    background-color: #142f44;
+    color: white;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  tr:hover {
+    background-color: rgba(255,255,255,0.08);
+  }
+
+  .delete-btn {
+    background: #e74c3c;
+    border: none;
+    padding: 6px 12px;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .delete-btn:hover {
+    background: #c0392b;
+  }
+</style>
+
+<div class="main-content">
+  <div class="container">
+    <h2>👥 Users & Ticket Counts</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Tickets Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.ticket_count }}</td>
+          <td>
+            {% if u.id != request.user.id %}
+              <form method="post"
+                    action="{% url 'superadmin_delete_user' u.id %}"
+                    onsubmit="return confirm('Are you sure you want to delete {{ u.username }}?');">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" style="text-align:center;">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+{% endblock %}

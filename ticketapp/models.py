@@ -48,6 +48,11 @@ from decimal import Decimal
 #         return f"{self.subject} - {self.priority}"
 
 # 3
+from django.contrib.auth.models import User
+from django.db import models
+from datetime import timedelta
+from django.utils import timezone
+
 class Ticket(models.Model):
     STATUS_CHOICES = [
         ("Pending", "Pending"),
@@ -61,6 +66,14 @@ class Ticket(models.Model):
         ("Low", "Low"),
     ]
 
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="tickets",
+        null=True,
+        blank=True,
+    )
+
     subject = models.CharField(max_length=200)
     requester_name = models.CharField(max_length=100)
     requester_email = models.EmailField()
@@ -71,25 +84,14 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    sla_due_at = models.DateTimeField(null=True, blank=True)  # Add SLA due date field
-    is_escalated = models.BooleanField(default=False)  # Whether ticket is escalated
+    sla_due_at = models.DateTimeField(null=True, blank=True)
+    is_escalated = models.BooleanField(default=False)
     assigned_to = models.CharField(max_length=50, blank=True, null=True)
     assigned_phone = models.CharField(max_length=20, blank=True, null=True)
-
 
     class Meta:
         db_table = "ticket_list"
 
-    # def save(self, *args, **kwargs):
-    #     # Calculate SLA due date on creation or if missing
-    #     if not self.sla_due_at:
-    #         if self.priority == "High":
-    #             self.sla_due_at = self.created_at + timedelta(hours=4)
-    #         elif self.priority == "Medium":
-    #             self.sla_due_at = self.created_at + timedelta(days=1)
-    #         elif self.priority == "Low":
-    #             self.sla_due_at = self.created_at + timedelta(days=3)
-    #     super().save(*args, **kwargs)
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         super().save(*args, **kwargs)
@@ -104,9 +106,9 @@ class Ticket(models.Model):
 
             super().save(update_fields=["sla_due_at"])
 
-
     def __str__(self):
         return f"{self.subject} - {self.priority}"
+
     
 class ClientOnboarding(models.Model):
     client_name = models.CharField(max_length=100)

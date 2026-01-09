@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket List{% endblock %}
+
+{% block content %}
+
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  th {
+    background: #142f44;
+    color: white;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  tr:hover {
+    background-color: #e6fbff;
+  }
+
+  .priority {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .high { background: #f87171; }
+  .medium { background: #facc15; color: #000; }
+  .low { background: #4ade80; }
+
+  .escalated {
+    color: red;
+    font-weight: bold;
+  }
+</style>
+
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+      🎫 Ticket List
+      {% if mode == "user" %}(My Tickets){% else %}(All Tickets){% endif %}
+    </h2>
+
+    <a href="{% url 'ticket_create' %}" class="btn btn-dark">
+      ➕ Add Ticket
+    </a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Subject</th>
+        <th>Requester</th>
+        <th>Phone</th>
+        <th>Client Phone</th>
+        <th>Assigned</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Escalation</th>
+        <th>Created</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for ticket in page_obj %}
+      <tr>
+        <td>{{ ticket.id }}</td>
+        <td>{{ ticket.subject }}</td>
+        <td>{{ ticket.requester_name }}</td>
+        <td>{{ ticket.requester_phone }}</td>
+        <td>{{ ticket.client_phone }}</td>
+        <td>{{ ticket.assigned_to|default:"Unassigned" }}</td>
+
+        <td>
+          <span class="priority {{ ticket.priority|lower }}">
+            {{ ticket.priority }}
+          </span>
+        </td>
+
+        <td>
+  {% if user.is_superuser %}
+    <form method="post" action="{% url 'update_ticket_status' ticket.id %}">
+      {% csrf_token %}
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="Pending" {% if ticket.status == "Pending" %}selected{% endif %}>Pending</option>
+        <option value="Work in Process" {% if ticket.status == "Work in Process" %}selected{% endif %}>Work in Process</option>
+        <option value="Completed" {% if ticket.status == "Completed" %}selected{% endif %}>Completed</option>
+      </select>
+    </form>
+  {% else %}
+    <!-- Users: Simple CSS class mapping -->
+    {% if ticket.status == 'Pending' %}
+      <span class="status-display status-pending">Pending</span>
+    {% elif ticket.status == 'Work in Process' %}
+      <span class="status-display status-work-in-process">Work in Process</span>
+    {% elif ticket.status == 'Completed' %}
+      <span class="status-display status-completed">Completed</span>
+    {% else %}
+      <span class="status-display">{{ ticket.status }}</span>
+    {% endif %}
+  {% endif %}
+</td>
+
+
+        <td>
+          {% if ticket.is_escalated %}
+            <span class="escalated">⚠ Escalated</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+
+        <td>{{ ticket.created_at|date:"d M Y H:i" }}</td>
+
+        <td>
+          <form method="post" action="{% url 'ticket_delete' ticket.id %}"
+                onsubmit="return confirm('Are you sure?');">
+            {% csrf_token %}
+            <button class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="11" class="text-center text-danger">
+          No tickets found
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="text-center mt-4">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <strong>
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </strong>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

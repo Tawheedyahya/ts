@@ -45,7 +45,8 @@ const ticketChart = new Chart(ticketCtx, {
 
 <hr/>
 
-<!-- <h2>Client Onboarding Summary</h2>
+{% if user.is_superuser %}
+<h2>Client Onboarding Summary</h2>
 <div class="row mb-4">
   <div class="col">
     <div class="card p-3 text-white bg-primary" style="border-radius: 15px;">
@@ -70,7 +71,7 @@ const ticketChart = new Chart(ticketCtx, {
 <h3>Onboarding Over Last 30 Days</h3>
 <canvas id="onboardingChart" width="800" height="400"></canvas> -->
 
-<!-- <script>
+<script>
 const onboardingCtx = document.getElementById('onboardingChart').getContext('2d');
 const onboardingChart = new Chart(onboardingCtx, {
     type: 'line',
@@ -99,5 +100,6 @@ const onboardingChart = new Chart(onboardingCtx, {
         },
     }
 });
-</script> -->
+</script>
+{% endif %}
 {% endblock %}

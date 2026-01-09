@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Create Normal User</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5faff 0%, #e8f4fd 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .form-container {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(20, 47, 68, 0.15);
+      width: 100%;
+      max-width: 420px;
+      border-top: 4px solid #142f44;
+    }
+    h2 {
+      color: #142f44;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #375a7f;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    /* Styling the Django-rendered inputs */
+    input[type="text"], input[type="password"], input[type="email"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d9e0;
+      border-radius: 8px;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      outline: none;
+      border-color: #2f80c6;
+      box-shadow: 0 0 0 3px rgba(47, 128, 198, 0.1);
+    }
+    .error-text {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    button, .btn-link {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: #142f44;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0e2232;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .messages {
+      margin-bottom: 20px;
+    }
+    .messages ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .success {
+      color: #28a745;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>➕ Create Normal User</h2>
+    
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="success">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <small class="error-text">{{ form.username.errors.0 }}</small>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+          <small class="error-text">{{ form.password1.errors.0 }}</small>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">Password confirmation</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+          <small class="error-text">{{ form.password2.errors.0 }}</small>
+        {% endif %}
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="btn-primary">Create Account</button>
+        <a href="{% url 'admin_ticket_list' %}" class="btn-secondary btn-link">Cancel</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

@@ -9,10 +9,10 @@ from django.dispatch import receiver
 from datetime import date
 from .models import PaymentPendingClient
 from ticketapp.whatsapp_utils import send_whatsapp_alert
-import stripe
+# import stripe
 from django.conf import settings
 
-stripe.api_key = settings.STRIPE_SECRET_KEY  # Add your secret key in settings.py  
+# stripe.api_key = settings.STRIPE_SECRET_KEY  # Add your secret key in settings.py  
 
 # @receiver(post_save, sender=Ticket)
 # def notify_ticket_completed(sender, instance, created, **kwargs):
@@ -637,22 +637,68 @@ def notify_overdue_payment(sender, instance, created, **kwargs):
         print("No payment notification sent (not overdue or already alerted)")
 
 def create_stripe_payment_link(amount, description):
-    print("Amount to be charged (in paise):", int(amount * 100))
-    payment_link = stripe.PaymentLink.create(
-        line_items=[{
-            'price_data': {
-                'currency': 'inr',
-                'unit_amount': int(amount * 100),  # If amount in rupees
-                'product_data': {
-                    'name': description,
-                },
-            },
-            'quantity': 1,
-        }],
-        after_completion={
-            'type': 'redirect',
-            'redirect': {'url': 'https://yourdomain.com/payment-success/'}
-        }
-    )
-    return payment_link.url
+    """
+    BANK TRANSFER ONLY - Stripe removed
+    """
+    print(f"[BANK TRANSFER] Generate UPI link for ₹{amount}: {description}")
+    return {
+        'type': 'bank_transfer',
+        'account_number': '1234567890',
+        'ifsc': 'SBIN0001234',
+        'upi_id': 'yourbusiness@paytm',
+        'amount': amount,
+        'message': f"Payment for {description}"
+    }
 
+@receiver(post_save, sender=PaymentPendingClient)
+def notify_overdue_payment(sender, instance, created, **kwargs):
+    print("notify_overdue_payment signal received")
+    
+    due_date = to_date(instance.due_date)
+    today = date.today()
+
+    if created or (due_date and today > due_date and not instance.alert_sent):
+        print(f"Processing payment notification for client {instance.client_name}")
+
+        desc = f"Overdue payment for {instance.client_name}"
+        
+        try:
+            amount = float(instance.payment_amount)
+            print("Payment amount:", amount)
+        except:
+            print("Invalid payment amount")
+            return
+
+        # BANK TRANSFER payment details
+        payment_details = create_stripe_payment_link(amount, desc)
+        
+        message_text = (
+            f"Dear {instance.client_name}, ₹{amount} payment overdue.\n\n"
+            f"🏦 BANK TRANSFER DETAILS:\n"
+            f"Account: 1234567890\n"
+            f"IFSC: SBIN0001234\n"
+            f"UPI: yourbusiness@paytm\n\n"
+            f"Reference: {instance.id}\n"
+            f"Due Date: {instance.due_date}"
+        )
+        
+        print("WhatsApp message:", message_text)
+
+        # Send WhatsApp (keep your existing logic)
+        success = send_whatsapp_alert(
+            instance.client_phone, instance.id,
+            payment_url=payment_details,  # Pass bank details
+            access_token="1454240.ma5kfaevUoUzpTQQD5JBianwx22KFLwpClDdqGEQTS",
+            template_id="1760521228933",
+            custom_field_id="668381",
+            message_text=message_text
+        )
+        
+        if success:
+            instance.alert_sent = True
+            instance.save(update_fields=['alert_sent'])
+            print("✅ Bank transfer details sent!")
+        else:
+            print("❌ WhatsApp failed")
+    else:
+        print("No notification needed")
